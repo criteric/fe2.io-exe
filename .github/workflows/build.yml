@@ -1,0 +1,23 @@
+name: Build Linux and Windows
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Linux development dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y build-essential pkg-config libasound2-dev libx11-dev libxcursor-dev libxi-dev libxrandr-dev libxkbcommon-dev libgl1-mesa-dev libwayland-dev
+      - run: cargo build --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fe2io-${{ runner.os }}
+          path: |
+            target/release/fe2io-native
+            target/release/fe2io-native.exe
+          if-no-files-found: error
